@@ -1,0 +1,12 @@
+services:
+  markdown-server:
+    build: .
+    container_name: markdown-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./content:/content:ro
+    environment:
+      - PORT=3000
+      - CONTENT_DIR=/content
