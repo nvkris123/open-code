@@ -1,0 +1,4 @@
+interface:
+  display_name: "Teach Me"
+  short_description: "Learn technical concepts visually"
+  default_prompt: "Use $teach-me to teach me a technical concept from first principles with visual explanations."
