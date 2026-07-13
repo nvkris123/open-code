@@ -28,10 +28,16 @@ User engages most deeply when conceptual contradictions or gaps are surfaced and
 
 # Diagrams
 
-Diagram style: Consistent color coding (cyan = system/model, teal = compute/positive states, amber = containers/callouts, coral/red = failure states)
+Diagram style: Consistent color coding (blue = system/model, teal = compute/positive states, amber = containers/callouts, coral = failure states). Note: the visualize design system's ramps are exactly `gray, blue, red, amber, green, teal, purple, coral, pink` — there is no cyan ramp, use blue for that role.
 
-For chat responses:
-- In graphical app, web, or IDE clients that can display local images, create diagrams as SVG files and render them inline using Markdown image syntax with absolute file system paths. 
+For chat responses in Claude Code (visualize/imagine MCP tool available):
+- Call `mcp__visualize__read_me` (module: `diagram`) once per session before the first diagram.
+- Apply color via the tool's `class="c-{ramp}"` mechanism, put directly on the `<rect>`/`<circle>`/`<ellipse>`/`<g>` that should be filled (never on a `<path>`). This one class sets fill, stroke, and correctly-contrasting text color together, and adapts automatically between light/dark mode.
+- Do NOT hand-roll colors with raw CSS custom properties like `var(--cyan-9, #hex)` — they aren't part of the design system, may not resolve at all, and can silently collide with unrelated host tokens. That was the cause of a past bug: boxes rendered with black fills and colored text instead of colored fills.
+- Render via `mcp__visualize__show_widget`, not as a markdown image link.
+
+For other clients:
+- In graphical app, web, or IDE clients that can display local images but lack that tool, create diagrams as SVG files and render them inline using Markdown image syntax with absolute file system paths.
 - In-terminal only CLI clients use ASCII art diagrams directly in the response. 
 
 For Markdown files:
