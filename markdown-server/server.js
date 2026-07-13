@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { marked } = require('marked');
+const { spawn } = require('child_process');
 
 function expandHome(p) {
   if (!p) return p;
@@ -69,6 +70,37 @@ marked.use({
     },
   },
 });
+
+function stripMarkdownForSpeech(md) {
+  let text = md;
+  // Drop YAML frontmatter
+  text = text.replace(/^---\n[\s\S]*?\n---\n/, '');
+  // Fenced code blocks -> drop
+  text = text.replace(/```[\s\S]*?```/g, '');
+  // Wikilinks [[path|Alias]] or [[path#heading]] -> Alias or last path segment
+  text = text.replace(/\[\[([^\]]+)\]\]/g, (_, inner) => {
+    const [target, alias] = inner.split('|');
+    if (alias) return alias.trim();
+    return target.split('#')[0].split('/').pop().replace(/-/g, ' ');
+  });
+  // Markdown links [text](url) -> text
+  text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  // Images ![alt](url) -> drop
+  text = text.replace(/!\[[^\]]*\]\([^)]*\)/g, '');
+  // Headers, blockquotes, list bullets
+  text = text.replace(/^#{1,6}\s*/gm, '');
+  text = text.replace(/^>\s?/gm, '');
+  text = text.replace(/^\s*[-*+]\s+/gm, '');
+  text = text.replace(/^\s*\d+\.\s+/gm, '');
+  // Bold/italic/inline code markers
+  text = text.replace(/(\*\*\*|\*\*|\*|__|_|`)/g, '');
+  // Horizontal rules
+  text = text.replace(/^-{3,}$/gm, '');
+  // Collapse whitespace
+  text = text.replace(/[ \t]+/g, ' ');
+  text = text.replace(/\n{3,}/g, '\n\n');
+  return text.trim();
+}
 
 function safePath(rel) {
   if (!rel) return CONTENT_DIR;
@@ -458,6 +490,28 @@ const PAGE = ({ title, body, activePath }) => {
   .index-list { list-style: none; padding: 0; }
   .index-list li { padding: 0.4em 0; }
 
+  .speak-btn {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.5rem;
+    z-index: 6;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: var(--bg-alt);
+    color: var(--ink);
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+  .speak-btn:hover { background: var(--bg-deep); }
+  .speak-btn[data-state="loading"] { cursor: wait; opacity: 0.7; }
+  .speak-btn[data-state="error"] { color: #a33; border-color: #a33; }
+
   @media (max-width: 800px) {
     .sidebar {
       position: fixed;
@@ -502,6 +556,7 @@ const PAGE = ({ title, body, activePath }) => {
   </aside>
   <div class="sidebar-resizer" id="sidebar-resizer"></div>
   <main class="content">
+    ${activePath ? `<button class="speak-btn" id="speak-btn" data-path="${escapeHtml(activePath)}" data-state="idle" title="Read aloud" aria-label="Read aloud">🔊</button>` : ''}
     ${body}
   </main>
 </div>
@@ -643,6 +698,43 @@ const PAGE = ({ title, body, activePath }) => {
     obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-processed'] });
     attach();
   })();
+
+  // Speak button: fetch server-rendered TTS audio and play/pause it
+  (function() {
+    const btn = document.getElementById('speak-btn');
+    if (!btn) return;
+    let audio = null;
+
+    function setState(s, icon) {
+      btn.dataset.state = s;
+      btn.textContent = icon;
+    }
+
+    btn.addEventListener('click', () => {
+      const state = btn.dataset.state;
+      if (state === 'idle' || state === 'error') {
+        setState('loading', '⏳');
+        audio = new Audio('/speak/' + encodeURI(btn.dataset.path));
+        audio.addEventListener('canplay', () => {
+          if (btn.dataset.state !== 'loading') return; // stop() was called meanwhile
+          setState('playing', '⏸');
+          audio.play();
+        });
+        audio.addEventListener('ended', () => setState('idle', '🔊'));
+        audio.addEventListener('error', () => setState('error', '⚠️'));
+        audio.load();
+      } else if (state === 'loading') {
+        if (audio) { audio.pause(); audio = null; }
+        setState('idle', '🔊');
+      } else if (state === 'playing') {
+        audio.pause();
+        setState('paused', '▶️');
+      } else if (state === 'paused') {
+        audio.play();
+        setState('playing', '⏸');
+      }
+    });
+  })();
 </script>
 </body>
 </html>`;
@@ -680,6 +772,40 @@ app.get('/view/*', (req, res) => {
   const processed = preprocessLinks(md, decodedRel);
   const html = marked.parse(processed);
   res.send(PAGE({ title: rel, body: html, activePath: rel }));
+});
+
+app.get('/speak/*', (req, res) => {
+  const full = safePath(req.params[0]);
+  if (!full || !fs.existsSync(full) || !fs.statSync(full).isFile()) return res.status(404).end();
+
+  const text = stripMarkdownForSpeech(fs.readFileSync(full, 'utf8'));
+  if (!text) return res.status(422).send('Nothing to read');
+
+  const tmpFile = path.join(os.tmpdir(), `mdspeak-${Date.now()}-${Math.random().toString(36).slice(2)}.m4a`);
+  const args = ['-o', tmpFile];
+  if (req.query.voice) args.push('-v', String(req.query.voice));
+  if (req.query.rate) args.push('-r', String(req.query.rate));
+
+  const proc = spawn('say', args);
+  proc.stdin.write(text);
+  proc.stdin.end();
+
+  proc.on('error', (err) => {
+    console.error('say failed to start:', err.message);
+    if (!res.headersSent) res.status(500).send('Text-to-speech unavailable (requires macOS `say`)');
+  });
+
+  proc.on('close', (code) => {
+    if (code !== 0 || !fs.existsSync(tmpFile)) {
+      if (!res.headersSent) res.status(500).send('Text-to-speech failed');
+      return;
+    }
+    res.setHeader('Content-Type', 'audio/mp4');
+    const stream = fs.createReadStream(tmpFile);
+    stream.pipe(res);
+    stream.on('close', () => fs.unlink(tmpFile, () => {}));
+    stream.on('error', () => fs.unlink(tmpFile, () => {}));
+  });
 });
 
 app.get('/raw/*', (req, res) => {
