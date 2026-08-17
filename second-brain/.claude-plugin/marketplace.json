@@ -1,0 +1,15 @@
+{
+  "name": "second-brain",
+  "description": "Second-brain wiki maintenance: ingest sources, query the wiki, lint it.",
+  "owner": {
+    "name": "Vinay"
+  },
+  "plugins": [
+    {
+      "name": "second-brain",
+      "description": "Skills and subagent for maintaining a second-brain wiki — /ingest, /query, /lint.",
+      "category": "Productivity",
+      "source": "."
+    }
+  ]
+}
