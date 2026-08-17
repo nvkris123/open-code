@@ -229,7 +229,21 @@ changed, anything notable — contradictions, stubs created, follow-ups.
 
 # Operations
 
-Define these three as slash commands in CLAUDE.md.
+The three operations are `/ingest`, `/query`, and `/lint`. Their full procedures are
+NOT written into this repo — they live once, in the shared **`second-brain` plugin**
+at `~/Documents/WORK/repos/open-code/second-brain`, and every brain enables that
+plugin rather than carrying its own copy.
+
+**Do NOT create `.claude/skills/`, `.claude/agents/`, or `.claude/commands/` in this
+repo.** Those directories used to be copied into every brain and the copies drifted
+apart; consolidating them into the plugin was deliberate. The only per-brain Claude
+configuration is `.claude/settings.json`, which enables the plugin.
+
+The specifications below are here so CLAUDE.md can say *what* each operation does,
+and so you can tell when one has gone wrong. The procedures themselves come from the
+plugin. Reference them in CLAUDE.md by their namespaced command names —
+`/second-brain:ingest`, `/second-brain:query`, `/second-brain:lint` — and name the
+`second-brain:wiki-researcher` subagent for read-heavy queries.
 
 ## /ingest <path-or-url>
 1. Read the source.
@@ -419,17 +433,49 @@ compared, a route, or anything where what-connects-to-what is the actual content
 
 1. If this repo already has content in a different layout, do NOT migrate it
    silently. Report what's there and what would have to move, and ask me first.
-2. Ask me about anything above that's genuinely underspecified for this domain —
+
+2. **Check that the shared plugin is wired up**, and fix it if not. Read
+   `.claude/settings.json` and confirm it has both keys:
+
+   ```json
+   {
+     "extraKnownMarketplaces": {
+       "second-brain": {
+         "source": {
+           "source": "directory",
+           "path": "/Users/vinay/Documents/WORK/repos/open-code/second-brain"
+         }
+       }
+     },
+     "enabledPlugins": { "second-brain@second-brain": true }
+   }
+   ```
+
+   `enabledPlugins` alone works on this machine but leans on user-level
+   registration, so add `extraKnownMarketplaces` too — that's what makes a fresh
+   clone resolve the plugin on its own. If the file is missing entirely, tell me to
+   run `claude plugin install second-brain@second-brain --scope project` from this
+   folder, then add the marketplace key.
+
+   Then verify no stale local copies exist: if `.claude/skills/`,
+   `.claude/agents/`, or `.claude/commands/` contain ingest/query/lint or
+   wiki-researcher, report them — they shadow the plugin and must be deleted, not
+   maintained. Brain-specific skills that do something else are fine to keep.
+
+3. Ask me about anything above that's genuinely underspecified for this domain —
    especially what this brain is FOR, since that shapes the index categories.
-3. Then write CLAUDE.md implementing everything in this document: the three layers,
+
+4. Then write CLAUDE.md implementing everything in this document: the three layers,
    the exact directory structure with the reasoning for why those folders and no
    others, the filing questions, frontmatter schema, source-page rules, link
-   conventions, index and log formats, the three operations with the full lint
-   checklist, ambient ingest, and the page-shape rules.
+   conventions, index and log formats, the operations **as provided by the
+   `second-brain` plugin** (never as local skill files), ambient ingest, and the
+   page-shape rules.
 
    Write CLAUDE.md in the same layered style it prescribes — it is the page I will
    reread most often, and a schema I can't skim is a schema that won't be followed.
-4. Create wiki/index.md and wiki/log.md if they don't exist.
+
+5. Create wiki/index.md and wiki/log.md if they don't exist.
 
 Write CLAUDE.md for a reader who has never seen this document — it has to stand on
 its own, because it's the only thing you'll read on future runs.
