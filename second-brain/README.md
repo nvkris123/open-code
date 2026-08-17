@@ -25,7 +25,7 @@ commands/{ingest,query,lint}.md
 
 ## Start a new second brain
 
-Five steps. The plugin gives you the verbs — `ingest`, `query`, `lint`. Step 4 is
+Four steps. The plugin gives you the verbs — `ingest`, `query`, `lint`. Step 3 is
 what makes it *your* brain, and it's the one that isn't a copy-paste.
 
 ### 1. Create the folder
@@ -34,7 +34,7 @@ what makes it *your* brain, and it's the one that isn't a copy-paste.
 mkdir -p ~/Documents/brains/my-brain && cd $_ && git init -q
 ```
 
-That's all you make by hand. Step 4 creates `raw/`, `wiki/`, `index.md`, and
+That's all you make by hand. Step 3 creates `raw/`, `wiki/`, `index.md`, and
 `log.md` for you.
 
 Make it a git repo, though. Pages get moved and links get rewritten in bulk later,
@@ -42,42 +42,31 @@ and git is what makes that recoverable.
 
 ### 2. Install the plugin
 
-Register the marketplace once per machine:
+From inside the new brain, point it at the marketplace:
 
 ```bash
-claude plugin marketplace add ~/Documents/WORK/repos/open-code/second-brain
+claude plugin marketplace add ~/Documents/WORK/repos/open-code/second-brain --scope project
 ```
 
-Then, from inside the new brain:
+Then enable it:
 
 ```bash
 claude plugin install second-brain@second-brain --scope project
 ```
 
-Project scope means the skills load in this brain and nowhere else — they won't
-clutter your code repos.
+`--scope project` on both is what matters. It writes `extraKnownMarketplaces` and
+`enabledPlugins` into the brain's own `.claude/settings.json`, so the skills load in
+this brain and nowhere else, and a fresh clone resolves the plugin with no
+user-level setup. Nothing to hand-edit.
 
-### 3. Make the settings portable
+Check it worked — run this **from inside the brain**, since project scope reads as
+disabled anywhere else:
 
-Step 2 writes only `enabledPlugins`, which leans on your user-level marketplace
-registration. Add the marketplace to the brain's `.claude/settings.json` too, so a
-fresh clone resolves it with no user-level setup:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "second-brain": {
-      "source": {
-        "source": "directory",
-        "path": "/Users/vinay/Documents/WORK/repos/open-code/second-brain"
-      }
-    }
-  },
-  "enabledPlugins": { "second-brain@second-brain": true }
-}
+```bash
+claude plugin list
 ```
 
-### 4. Generate `CLAUDE.md`
+### 3. Generate `CLAUDE.md`
 
 Start Claude **inside the new brain folder** and give it:
 
@@ -89,9 +78,9 @@ deliberate: the answer shapes the `index.md` groupings, which is the one thing t
 can't be templated. Have an answer ready — roughly, what subjects this brain covers,
 which people and organizations recur, and what you'll want to ask it later.
 
-It writes `CLAUDE.md` and creates `wiki/index.md` and `wiki/log.md`.
+It writes `CLAUDE.md`, then builds `raw/` and `wiki/` with `index.md` and `log.md`.
 
-### 5. Feed it
+### 4. Feed it
 
 Put documents in `raw/` — articles, transcripts, PDFs, statements, notes — then:
 
@@ -105,7 +94,7 @@ few dozen pages.
 
 ## Add it to an existing brain
 
-Steps 2 and 3 only. The brain keeps its existing `CLAUDE.md`; the plugin replaces
+Step 2 only. The brain keeps its existing `CLAUDE.md`; the plugin replaces
 whatever per-repo copies of the skills it had.
 
 ## Editing

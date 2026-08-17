@@ -452,10 +452,14 @@ compared, a route, or anything where what-connects-to-what is the actual content
    ```
 
    `enabledPlugins` alone works on this machine but leans on user-level
-   registration, so add `extraKnownMarketplaces` too — that's what makes a fresh
-   clone resolve the plugin on its own. If the file is missing entirely, tell me to
-   run `claude plugin install second-brain@second-brain --scope project` from this
-   folder, then add the marketplace key.
+   registration; `extraKnownMarketplaces` is what makes a fresh clone resolve the
+   plugin on its own. If either key is missing, don't hand-edit the JSON — tell me
+   to run these two from this folder, which write both keys correctly:
+
+   ```bash
+   claude plugin marketplace add ~/Documents/WORK/repos/open-code/second-brain --scope project
+   claude plugin install second-brain@second-brain --scope project
+   ```
 
    Then verify no stale local copies exist: if `.claude/skills/`,
    `.claude/agents/`, or `.claude/commands/` contain ingest/query/lint or
