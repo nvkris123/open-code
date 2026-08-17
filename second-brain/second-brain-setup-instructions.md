@@ -475,7 +475,20 @@ compared, a route, or anything where what-connects-to-what is the actual content
    Write CLAUDE.md in the same layered style it prescribes — it is the page I will
    reread most often, and a schema I can't skim is a schema that won't be followed.
 
-5. Create wiki/index.md and wiki/log.md if they don't exist.
+5. **Create the skeleton yourself** — don't make me do it by hand. If they don't
+   already exist, create:
+
+   - `raw/` — plus an empty `raw/.gitkeep`, since git won't track an empty directory
+     and this one starts empty.
+   - `wiki/` with `index.md` and `log.md`.
+
+   Give `index.md` its "start here" opening — a few lines on what this brain covers
+   and which pages to read first — even if the catalog below it is empty for now.
+   Give `log.md` an `## [YYYY-MM-DD] note | brain created` entry recording what we
+   decided in step 3.
+
+   Do not create any other directory. `people/`, `sources/`, and `desk/` appear the
+   first time a page actually belongs in one.
 
 Write CLAUDE.md for a reader who has never seen this document — it has to stand on
 its own, because it's the only thing you'll read on future runs.
