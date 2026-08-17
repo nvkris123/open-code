@@ -31,11 +31,14 @@ what makes it *your* brain, and it's the one that isn't a copy-paste.
 ### 1. Create the folder
 
 ```bash
-mkdir -p ~/Documents/brains/my-brain && cd $_ && git init -q && mkdir -p raw wiki
+mkdir -p ~/Documents/brains/my-brain && cd $_ && git init -q
 ```
 
-Make it a git repo. Pages get moved and links get rewritten in bulk later, and git
-is what makes that recoverable.
+That's all you make by hand. Step 4 creates `raw/`, `wiki/`, `index.md`, and
+`log.md` for you.
+
+Make it a git repo, though. Pages get moved and links get rewritten in bulk later,
+and git is what makes that recoverable.
 
 ### 2. Install the plugin
 
