@@ -461,10 +461,32 @@ compared, a route, or anything where what-connects-to-what is the actual content
    claude plugin install second-brain@second-brain --scope project
    ```
 
-   Then verify no stale local copies exist: if `.claude/skills/`,
-   `.claude/agents/`, or `.claude/commands/` contain ingest/query/lint or
-   wiki-researcher, report them — they shadow the plugin and must be deleted, not
-   maintained. Brain-specific skills that do something else are fine to keep.
+   Then verify no stale local copies exist: if `.claude/skills/` or
+   `.claude/agents/` contain ingest/query/lint or wiki-researcher, report them —
+   they shadow the plugin and must be deleted, not maintained. Brain-specific skills
+   that do something else are fine to keep.
+
+   **Write the three command shims** into `.claude/commands/` — `ingest.md`,
+   `query.md`, `lint.md` — so I can type `/ingest` instead of
+   `/second-brain:ingest`. Plugin commands are always namespaced and there's no
+   aliasing mechanism, so a local shim is the only way to get the short form. Each
+   is three lines and contains **no procedure**, only a pointer, so it can't drift
+   from the skill the way a copied SKILL.md would:
+
+   ```markdown
+   ---
+   description: Process a new source into the wiki — read it, discuss takeaways, write a source page, ripple updates, log.
+   argument-hint: <path-or-url>
+   ---
+
+   Invoke the `second-brain:ingest` skill and follow its procedure for this source: $ARGUMENTS
+
+   If `$ARGUMENTS` is empty, ask the user for a path under `raw/` or a URL.
+   ```
+
+   Do the same for `query` (argument-hint `<question>`) and `lint` (no argument
+   hint). If you ever find yourself pasting a *procedure* into one of these, stop —
+   that belongs in the plugin.
 
 3. Ask me about anything above that's genuinely underspecified for this domain —
    especially what this brain is FOR, since that shapes the index categories.
