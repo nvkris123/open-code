@@ -45,7 +45,7 @@ and git is what makes that recoverable.
 From inside the new brain, point it at the marketplace:
 
 ```bash
-claude plugin marketplace add ~/Documents/WORK/repos/open-code/second-brain --scope project
+claude plugin marketplace add path-to-repo/open-code/second-brain --scope project
 ```
 
 Then enable it:
@@ -70,7 +70,7 @@ claude plugin list
 
 Start Claude **inside the new brain folder** and give it:
 
-> Read `~/Documents/WORK/repos/open-code/second-brain/second-brain-setup-instructions.md`
+> Read `path-to-repo/open-code/second-brain/second-brain-setup-instructions.md`
 > and follow the "Your task" section at the end for this repo.
 
 It will ask what the brain is *for* before writing anything. That question is
