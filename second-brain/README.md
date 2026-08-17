@@ -88,9 +88,17 @@ Put documents in `raw/` — articles, transcripts, PDFs, statements, notes — t
 /second-brain:ingest raw/<filename>
 ```
 
-Commands are namespaced: `/second-brain:ingest`, `/second-brain:query`,
-`/second-brain:lint`. Run `/second-brain:lint` every so often once the wiki has a
-few dozen pages.
+Run `/lint` every so often once the wiki has a few dozen pages.
+
+**On command names.** Plugin commands are always namespaced — `/second-brain:ingest`
+— and Claude Code has no aliasing mechanism to shorten that. Step 3 therefore writes
+three shims into the brain's `.claude/commands/`, giving you plain `/ingest`,
+`/query`, and `/lint`. Each is three lines and holds only a pointer to the plugin
+skill, never a procedure, so it can't drift the way a copied `SKILL.md` would. Both
+forms work.
+
+You can also just ask in plain English — "ingest raw/statement.pdf" — since the
+skills are model-invoked and their descriptions match those phrasings.
 
 ## Add it to an existing brain
 
